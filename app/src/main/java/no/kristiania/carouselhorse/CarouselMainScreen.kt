@@ -7,25 +7,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun CarouselMainScreen() {
+fun CarouselMainScreen(carouselViewModel: CarouselViewModel = viewModel()) {
+    val carouselViewState by carouselViewModel.carouselState.collectAsState()
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally) {
-        HorseView(currentHorse = R.drawable.horse12)
+        HorseView(currentHorse = carouselViewState.currentHorse)
         Row {
             Button(onClick = {
             }) {
                 Text(text = "Backwards")
             }
             Button(onClick = {
+                carouselViewModel.nextHorse()
             }) {
                 Text(text = "Forward")
             }
