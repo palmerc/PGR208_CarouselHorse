@@ -18,7 +18,7 @@ class CarouselViewModel: ViewModel() {
         reset()
     }
 
-    private fun currentHorse() {
+    private fun triggerHorseUpdate() {
         currentHorseIndex %= (carouselOfHorses.size - 1)
         Log.d(TAG, "Horse $currentHorseIndex")
 
@@ -31,10 +31,13 @@ class CarouselViewModel: ViewModel() {
 
     fun nextHorse() {
         currentHorseIndex += 1
-        currentHorse()
+        triggerHorseUpdate()
     }
 
     fun previousHorse() {
+        currentHorseIndex -= 1
+        if (currentHorseIndex < 0) currentHorseIndex = carouselOfHorses.size - 2
+        triggerHorseUpdate()
     }
 
     fun toggleAutomatic() {

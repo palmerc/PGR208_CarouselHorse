@@ -27,6 +27,7 @@ fun CarouselMainScreen(carouselViewModel: CarouselViewModel = viewModel()) {
         HorseView(currentHorse = carouselViewState.currentHorse)
         Row {
             Button(onClick = {
+                carouselViewModel.previousHorse()
             }) {
                 Text(text = "Backwards")
             }
