@@ -2,10 +2,14 @@ package no.kristiania.carouselhorse
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 
 class CarouselViewModel: ViewModel() {
@@ -14,6 +18,7 @@ class CarouselViewModel: ViewModel() {
     val carouselState: StateFlow<CarouselState> = _carouselState.asStateFlow()
     private var currentHorseIndex = 0
     private var automaticHorse = false
+    private val delayInMillis = 50L
 
     init {
         reset()
@@ -33,12 +38,26 @@ class CarouselViewModel: ViewModel() {
     fun nextHorse() {
         currentHorseIndex += 1
         triggerHorseUpdate()
+
+        if (automaticHorse) {
+            GlobalScope.launch(Dispatchers.Main) {
+                delay(delayInMillis)
+                nextHorse()
+            }
+        }
     }
 
     fun previousHorse() {
         currentHorseIndex -= 1
         if (currentHorseIndex < 0) currentHorseIndex = carouselOfHorses.size - 2
         triggerHorseUpdate()
+
+        if (automaticHorse) {
+            GlobalScope.launch(Dispatchers.Main) {
+                delay(delayInMillis)
+                previousHorse()
+            }
+        }
     }
 
     fun toggleAutomatic(): Boolean {
