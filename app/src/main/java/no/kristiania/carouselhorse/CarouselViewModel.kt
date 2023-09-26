@@ -19,6 +19,7 @@ class CarouselViewModel: ViewModel() {
     private var currentHorseIndex = 0
     private var automaticHorse = false
     private val delayInMillis = 50L
+    private var direction = Directions.Unknown
 
     init {
         reset()
@@ -35,27 +36,45 @@ class CarouselViewModel: ViewModel() {
         }
     }
 
-    fun nextHorse() {
-        currentHorseIndex += 1
-        triggerHorseUpdate()
+    fun nextHorse(click: Boolean = false) {
+        if (click) {
+            if (direction == Directions.Backward || direction == Directions.Unknown) {
+                direction = Directions.Forward
+            } else {
+                return
+            }
+        }
 
-        if (automaticHorse) {
-            GlobalScope.launch(Dispatchers.Main) {
-                delay(delayInMillis)
-                nextHorse()
+        if (direction == Directions.Forward) {
+            currentHorseIndex += 1
+            triggerHorseUpdate()
+            if (automaticHorse) {
+                GlobalScope.launch(Dispatchers.Main) {
+                    delay(delayInMillis)
+                    nextHorse()
+                }
             }
         }
     }
 
-    fun previousHorse() {
-        currentHorseIndex -= 1
-        if (currentHorseIndex < 0) currentHorseIndex = carouselOfHorses.size - 2
-        triggerHorseUpdate()
+    fun previousHorse(click: Boolean = false) {
+        if (click) {
+            if (direction == Directions.Forward || direction == Directions.Unknown) {
+                direction = Directions.Backward
+            } else {
+                return
+            }
+        }
 
-        if (automaticHorse) {
-            GlobalScope.launch(Dispatchers.Main) {
-                delay(delayInMillis)
-                previousHorse()
+        if (direction == Directions.Backward) {
+            currentHorseIndex -= 1
+            if (currentHorseIndex < 0) currentHorseIndex = carouselOfHorses.size - 2
+            triggerHorseUpdate()
+            if (automaticHorse) {
+                GlobalScope.launch(Dispatchers.Main) {
+                    delay(delayInMillis)
+                    previousHorse()
+                }
             }
         }
     }
