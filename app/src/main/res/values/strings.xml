@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Horse</string>
+    <string name="horse_frame_description">Our happy horse view</string>
 </resources>
