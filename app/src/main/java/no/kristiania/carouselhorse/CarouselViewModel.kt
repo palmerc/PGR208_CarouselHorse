@@ -13,6 +13,7 @@ class CarouselViewModel: ViewModel() {
     private val _carouselState = MutableStateFlow(CarouselState())
     val carouselState: StateFlow<CarouselState> = _carouselState.asStateFlow()
     private var currentHorseIndex = 0
+    private var automaticHorse = false
 
     init {
         reset()
@@ -40,7 +41,11 @@ class CarouselViewModel: ViewModel() {
         triggerHorseUpdate()
     }
 
-    fun toggleAutomatic() {
+    fun toggleAutomatic(): Boolean {
+        val state = automaticHorse
+        automaticHorse = !state
+        Log.d(TAG, "$automaticHorse")
+        return automaticHorse
     }
 
     fun reset() {
