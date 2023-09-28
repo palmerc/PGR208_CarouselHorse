@@ -6,9 +6,17 @@ import okhttp3.WebSocket
 import okhttp3.WebSocketListener
 import okio.ByteString
 
+
+interface EchoWebSocketListenerDelegate {
+    fun textReceived(msg: String)
+    fun bytesReceived(msg: ByteString)
+}
+
+
+
 class EchoWebSocketListener : WebSocketListener() {
     val TAG = "EchoWebSocketListener"
-//    var delegate: EchoWebSocketListenerDelegate? = null
+    var delegate: EchoWebSocketListenerDelegate? = null
 
     override fun onOpen(webSocket: WebSocket, response: Response) {
         Log.d(TAG, "WSL onOpen")
@@ -19,12 +27,13 @@ class EchoWebSocketListener : WebSocketListener() {
     override fun onMessage(webSocket: WebSocket, text: String) {
         Log.d(TAG, "WSL onMessage text: ${text}")
 
-//        delegate?.messageReceived(text)
+        delegate?.textReceived(text)
     }
 
     override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
-        Log.d(TAG, "WSL onMessage bytes: ${bytes}")
+        Log.d(TAG, "WSL onMessage bytes: ${bytes.size} bytes")
 
+        delegate?.bytesReceived(bytes)
     }
 
     override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {

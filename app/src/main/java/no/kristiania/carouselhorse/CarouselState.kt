@@ -1,5 +1,7 @@
 package no.kristiania.carouselhorse
 
+import android.graphics.Bitmap
+
 data class CarouselState(
-    val currentHorse: Int = R.drawable.horse12
+    val currentHorse: Bitmap?
 )

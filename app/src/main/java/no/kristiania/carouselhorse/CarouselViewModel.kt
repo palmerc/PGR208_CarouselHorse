@@ -22,14 +22,15 @@ import okio.ByteString
 import java.io.ByteArrayOutputStream
 
 
-class CarouselViewModel(application: Application): AndroidViewModel(application) {
+class CarouselViewModel(application: Application): AndroidViewModel(application), EchoWebSocketListenerDelegate {
     private val TAG = "CarouselViewModel"
-    private val _carouselState = MutableStateFlow(CarouselState())
+    private val _carouselState = MutableStateFlow(CarouselState(null))
     val carouselState: StateFlow<CarouselState> = _carouselState.asStateFlow()
 
     private var currentHorseIndex = 0
     private var automaticHorse = false
-    private val delayInMillis = 50L
+    private var isRunning = false
+    private val delayInMillis = 100L
     private var direction = Directions.Unknown
     private var listener: EchoWebSocketListener? = null
     private var ws: WebSocket? = null
@@ -39,33 +40,36 @@ class CarouselViewModel(application: Application): AndroidViewModel(application)
         startWebSocket()
     }
 
-    private fun triggerHorseUpdate() {
+    private fun sendHorseBytes() {
         currentHorseIndex %= (carouselOfHorses.size - 1)
-        Log.d(TAG, "Horse $currentHorseIndex")
+        Log.d(TAG, "Horse Index $currentHorseIndex")
 
         val horseResource = carouselOfHorses[currentHorseIndex]
         Log.d(TAG, "Horse Resource: $horseResource")
 
-        _carouselState.update { currentState ->
-            currentState.copy(currentHorse = horseResource)
-        }
-
         sendBytes(horseResource)
+    }
+
+    private fun triggerHorseUpdate(bitmap: Bitmap) {
+        _carouselState.update { currentState ->
+            currentState.copy(currentHorse = bitmap)
+        }
     }
 
     fun nextHorse(repeat: Boolean = false) {
         if (!repeat) {
             if (direction == Directions.Backward || direction == Directions.Unknown) {
                 direction = Directions.Forward
-            } else if (automaticHorse) {
+            } else if (automaticHorse && isRunning) {
                 return
             }
         }
 
         if (direction == Directions.Forward) {
             currentHorseIndex += 1
-            triggerHorseUpdate()
+            sendHorseBytes()
             if (automaticHorse) {
+                isRunning = true
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(delayInMillis)
                     nextHorse(repeat = true)
@@ -78,7 +82,7 @@ class CarouselViewModel(application: Application): AndroidViewModel(application)
         if (!repeat) {
             if (direction == Directions.Forward || direction == Directions.Unknown) {
                 direction = Directions.Backward
-            } else if (automaticHorse) {
+            } else if (automaticHorse && isRunning) {
                 return
             }
         }
@@ -86,8 +90,9 @@ class CarouselViewModel(application: Application): AndroidViewModel(application)
         if (direction == Directions.Backward) {
             currentHorseIndex -= 1
             if (currentHorseIndex < 0) currentHorseIndex = carouselOfHorses.size - 2
-            triggerHorseUpdate()
+            sendHorseBytes()
             if (automaticHorse) {
+                isRunning = true
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(delayInMillis)
                     previousHorse(repeat = true)
@@ -98,13 +103,22 @@ class CarouselViewModel(application: Application): AndroidViewModel(application)
 
     fun toggleAutomatic(): Boolean {
         val state = automaticHorse
+        if (state == false) {
+            isRunning = false
+        }
         automaticHorse = !state
         Log.d(TAG, "$automaticHorse")
         return automaticHorse
     }
 
     fun reset() {
-        _carouselState.value = CarouselState(currentHorse = standingHorse)
+        val resources = getApplication<Application>().resources
+        val bm = BitmapFactory.decodeResource(resources, standingHorse)
+        val stream = ByteArrayOutputStream()
+        GlobalScope.launch {
+            bm.compress(Bitmap.CompressFormat.PNG, 100, stream)
+            _carouselState.value = CarouselState(currentHorse = bm)
+        }
     }
 
     private fun startWebSocket() {
@@ -112,7 +126,7 @@ class CarouselViewModel(application: Application): AndroidViewModel(application)
         val wsURL = "ws://192.168.7.79:8765"
         val wsRequest: Request = Request.Builder().url(wsURL).build()
         listener = EchoWebSocketListener()
-//        listener?.delegate = this
+        listener?.delegate = this
         listener?.also {
             ws = OkHttpClient().newWebSocket(wsRequest, it)
         }
@@ -131,5 +145,13 @@ class CarouselViewModel(application: Application): AndroidViewModel(application)
             bm.compress(Bitmap.CompressFormat.PNG, 100, stream)
             ws?.send(bytes = ByteString.of(*stream.toByteArray()))
         }
+    }
+
+    override fun textReceived(msg: String) {
+    }
+
+    override fun bytesReceived(msg: ByteString) {
+        val data = msg.toByteArray()
+        triggerHorseUpdate(BitmapFactory.decodeByteArray(data, 0, data.size))
     }
 }

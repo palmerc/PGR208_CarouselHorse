@@ -1,5 +1,7 @@
 package no.kristiania.carouselhorse
 
+import android.content.res.Resources
+import android.graphics.Bitmap
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,10 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
@@ -62,13 +67,15 @@ fun CarouselMainScreen(carouselViewModel: CarouselViewModel = viewModel()) {
 }
 
 @Composable
-fun HorseView(currentHorse: Int) {
-    Image(
-        modifier = Modifier.fillMaxWidth(0.8f),
-        painter = painterResource(id = currentHorse),
-        contentScale = ContentScale.Fit,
-        contentDescription = stringResource(id = R.string.horse_frame_description)
-    )
+fun HorseView(currentHorse: Bitmap?) {
+    if (currentHorse != null) {
+        Image(
+            modifier = Modifier.fillMaxWidth(0.8f),
+            bitmap = currentHorse!!.asImageBitmap(),
+            contentScale = ContentScale.Fit,
+            contentDescription = stringResource(id = R.string.horse_frame_description)
+        )
+    }
 }
 
 @Preview(showBackground = true)
