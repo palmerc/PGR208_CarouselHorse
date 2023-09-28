@@ -1,0 +1,35 @@
+<h1>Lecture 5 - Networked Horse</h1>
+<p><a href="https://github.com/palmerc/PGR208_CarouselHorse">Lecture 5 Repository</a></p>
+<ul>
+<li><a href="https://kotlinlang.org">Kotlin Language Reference</a></li>
+<li><a href="https://www.jetpackcompose.net">Jetpack Compose Reference</a></li>
+</ul>
+<p>We have a series of commits that progressively build up the Alternative assignment of just animating the horse. We achieve this by using a <a href="https://developer.android.com/jetpack/compose/state">State Flow</a>. Why?</p>
+<p>As we have repeatedly stated, updating the screen is an expensive operation so we try to clue the Android frameworks into when we need to have the screen redrawn. We achieve this by creating an object to hold our state, and connecting it to the View via a <a href="https://developer.android.com/topic/libraries/architecture/viewmodel">ViewModel</a>.</p>
+<p>The state in the Alternative assignment was to pass the Resource id of a carousel of horses. The only complicated logic is really the play between automatic and manual updating of the horse image.</p>
+<p>Extending this to the Network leverages our previous websocket code and instead of sending strings, we send bytes. The hard part of this is Decoding image assets into bytes that are suitable for transmitting over the websocket and general code organization.</p>
+<h2>Key elements</h2>
+<h3>The decoding of a resource and transmitting it</h3>
+<pre><code>fun sendBytes(resourceId: Int) {
+    val resources = getApplication&lt;Application&gt;().resources
+    val bm = BitmapFactory.decodeResource(resources, resourceId)
+    val stream = ByteArrayOutputStream()
+    GlobalScope.launch {
+        bm.compress(Bitmap.CompressFormat.PNG, 100, stream)
+        ws?.send(bytes = ByteString.of(*stream.toByteArray()))
+    }
+}
+</code></pre>
+<h3>Receiving the bytes <a href="https://square.github.io/okio/2.x/okio/okio/-byte-string/index.html">ByteString</a> and turning it back into a <a href="https://developer.android.com/reference/android/graphics/Bitmap">Bitmap</a></h3>
+<pre><code>override fun bytesReceived(msg: ByteString) {
+    val data = msg.toByteArray()
+    triggerHorseUpdate(BitmapFactory.decodeByteArray(data, 0, data.size))
+}
+</code></pre>
+<h3>Triggering the state change</h3>
+<pre><code>private fun triggerHorseUpdate(bitmap: Bitmap) {
+    _carouselState.update { currentState -&gt;
+        currentState.copy(currentHorse = bitmap)
+    }
+}
+</code></pre>
