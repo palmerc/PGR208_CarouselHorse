@@ -29,9 +29,10 @@ class CarouselViewModel: ViewModel() {
         currentHorseIndex %= (carouselOfHorses.size - 1)
         Log.d(TAG, "Horse $currentHorseIndex")
 
+        val horseResource = carouselOfHorses[currentHorseIndex]
+        Log.d(TAG, "Horse Resource: $horseResource")
+
         _carouselState.update { currentState ->
-            val horseResource = carouselOfHorses[currentHorseIndex]
-            Log.d(TAG, "Horse Resource: $horseResource")
             currentState.copy(currentHorse = horseResource)
         }
     }
