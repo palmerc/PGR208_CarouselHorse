@@ -36,11 +36,11 @@ class CarouselViewModel: ViewModel() {
         }
     }
 
-    fun nextHorse(click: Boolean = false) {
-        if (click) {
+    fun nextHorse(repeat: Boolean = false) {
+        if (!repeat) {
             if (direction == Directions.Backward || direction == Directions.Unknown) {
                 direction = Directions.Forward
-            } else {
+            } else if (automaticHorse) {
                 return
             }
         }
@@ -51,17 +51,17 @@ class CarouselViewModel: ViewModel() {
             if (automaticHorse) {
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(delayInMillis)
-                    nextHorse()
+                    nextHorse(repeat = true)
                 }
             }
         }
     }
 
-    fun previousHorse(click: Boolean = false) {
-        if (click) {
+    fun previousHorse(repeat: Boolean = false) {
+        if (!repeat) {
             if (direction == Directions.Forward || direction == Directions.Unknown) {
                 direction = Directions.Backward
-            } else {
+            } else if (automaticHorse) {
                 return
             }
         }
@@ -73,7 +73,7 @@ class CarouselViewModel: ViewModel() {
             if (automaticHorse) {
                 GlobalScope.launch(Dispatchers.Main) {
                     delay(delayInMillis)
-                    previousHorse()
+                    previousHorse(repeat = true)
                 }
             }
         }
